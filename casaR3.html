@@ -230,9 +230,11 @@
                         <polygon points="115,115 565,115 725,40 275,40" fill="#3182ce" class="room-shape"/> <!-- floor -->
                         <polygon points="275,40 725,40 725,22 275,22" fill="#2c5282" pointer-events="none"/> <!-- back wall -->
                         <polygon points="725,40 725,22 565,32 565,115" fill="#2b6cb0" pointer-events="none"/> <!-- side wall -->
-                        <!-- desk (mirrored and positioned inside the room) -->
-                        <polygon points="500,90 410,90 360,70 450,70" fill="#a0aec0"/>
-                        <rect x="415" y="95" width="20" height="25" fill="#e2e8f0" />
+                        <!-- inner wall (left side of cutout) -->
+                        <rect x="115" y="115" width="4" height="100" fill="#2c5282"/>
+                        <!-- desk positioned inside the cutout (115,115 to 565,215) -->
+                        <polygon points="200,180 280,180 300,160 220,160" fill="#a0aec0"/>
+                        <rect x="225" y="185" width="20" height="25" fill="#e2e8f0" />
                         <text class="room-label" x="340" y="85">Management</text>
                     </g>
                     <!-- USM Sector -->
@@ -240,9 +242,11 @@
                         <polygon points="115,230 330,230 410,190 195,190" class="room-shape" fill="#38a169"/>
                         <polygon points="195,190 410,190 410,120 195,120" fill="#2f855a" pointer-events="none"/>
                         <polygon points="410,190 410,120 330,160 330,230" fill="#3f996e" pointer-events="none"/>
-                        <!-- servers (mirrored and positioned inside the room) -->
-                        <rect x="290" y="200" width="20" height="35" fill="#e2e8f0"/>
-                        <rect x="260" y="200" width="20" height="35" fill="#e2e8f0"/>
+                        <!-- inner wall (left side of cutout) -->
+                        <rect x="115" y="230" width="4" height="140" fill="#2f855a"/>
+                        <!-- servers positioned inside the cutout (115,230 to 330,370) -->
+                        <rect x="200" y="320" width="20" height="35" fill="#e2e8f0"/>
+                        <rect x="230" y="320" width="20" height="35" fill="#e2e8f0"/>
                         <text class="room-label" x="222.5" y="210">USM Sector</text>
                     </g>
                     <!-- UXS Team -->
@@ -250,8 +254,10 @@
                         <polygon points="350,230 565,230 645,190 430,190" class="room-shape" fill="#dd6b20"/>
                         <polygon points="430,190 645,190 645,120 430,120" fill="#c05621" pointer-events="none"/>
                         <polygon points="645,190 645,120 565,160 565,230" fill="#d06020" pointer-events="none"/>
-                         <!-- helpdesk (mirrored and positioned inside the room) -->
-                        <polygon points="480,210 410,210 380,200 450,200" fill="#a0aec0" />
+                        <!-- inner wall (left side of cutout) -->
+                        <rect x="350" y="230" width="4" height="140" fill="#c05621"/>
+                         <!-- helpdesk positioned inside the cutout (350,230 to 565,370) -->
+                        <polygon points="400,320 480,320 500,300 420,300" fill="#a0aec0" />
                         <text class="room-label" x="457.5" y="210">UXS Team</text>
                     </g>
                     <!-- OCT Team -->
@@ -259,8 +265,10 @@
                         <polygon points="115,385 330,385 410,345 195,345" class="room-shape" fill="#805ad5"/>
                         <polygon points="195,345 410,345 410,275 195,275" fill="#6b46c1" pointer-events="none"/>
                         <polygon points="410,345 410,275 330,315 330,385" fill="#704ec5" pointer-events="none"/>
-                         <!-- board (mirrored and positioned inside the room) -->
-                        <rect x="280" y="360" width="80" height="50" fill="#e2e8f0"/>
+                        <!-- inner wall (left side of cutout) -->
+                        <rect x="115" y="385" width="4" height="140" fill="#6b46c1"/>
+                         <!-- board positioned inside the cutout (115,385 to 330,525) -->
+                        <rect x="180" y="470" width="80" height="50" fill="#e2e8f0"/>
                         <text class="room-label" x="222.5" y="365">OCT Team</text>
                     </g>
                     <!-- CAM Team -->
@@ -268,7 +276,9 @@
                         <polygon points="350,385 565,385 645,345 430,345" class="room-shape" fill="#d53f8c"/>
                         <polygon points="430,345 645,345 645,275 430,275" fill="#b83280" pointer-events="none"/>
                         <polygon points="645,345 645,275 565,315 565,385" fill="#c53986" pointer-events="none"/>
-                        <circle cx="455" cy="365" r="6" fill="#2d2d2d" stroke="none"/>
+                        <!-- inner wall (left side of cutout) -->
+                        <rect x="350" y="385" width="4" height="140" fill="#b83280"/>
+                        <circle cx="400" cy="470" r="6" fill="#2d2d2d" stroke="none"/>
                         <text class="room-label" x="457.5" y="365">CAM Team</text>
                     </g>
                 </g>
