@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R3 Unit - Corporate House Explorer</title>
+    <script src="https://cdn/tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the paper/comic effect and layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* A subtle paper texture using CSS gradients */
+            background-color: #f7f4ed; /* Warmer paper color */
+            background-image: linear-gradient(rgba(200, 190, 170, 0.2) .1em, transparent .1em), linear-gradient(90deg, rgba(200, 190, 170, 0.2) .1em, transparent .1em);
+            background-size: 2em 2em;
+        }
+
+        /* SVG styles */
+        .room-group {
+             cursor: pointer;
+        }
+        
+        .room-shape, .room-group {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .room-group:hover {
+            transform: scale(1.02);
+            filter: brightness(1.15);
+        }
+        
+        #house-and-env {
+            filter: url(#paper-texture);
+        }
+
+        .room-label {
+            font-size: 22px;
+            font-weight: bold;
+            fill: #ffffff;
+            stroke: #000000;
+            stroke-width: 0.7px;
+            text-anchor: middle;
+            pointer-events: none; /* Make text non-interactive */
+        }
+        
+        /* Animations */
+        @keyframes puff-smoke {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+            50% { transform: translate(10px, -30px) scale(1.5); opacity: 0.4; }
+            100% { transform: translate(20px, -60px) scale(2.2); opacity: 0; }
+        }
+
+        .smoke {
+            animation: puff-smoke 4.5s infinite linear;
+            transform-origin: center;
+        }
+        
+        @keyframes blink-light {
+            0%, 48%, 100% { fill: #c53030; } /* Muted red */
+            50%, 98% { fill: #fefcbf; } /* yellow-ish */
+        }
+
+        #antenna-light {
+            animation: blink-light 2s infinite;
+        }
+        
+        @keyframes move-cloud {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(900px); }
+        }
+        
+        .cloud-1 {
+            animation: move-cloud 60s infinite linear;
+        }
+        .cloud-2 {
+            animation: move-cloud 90s infinite linear 10s;
+        }
+
+
+        /* Modal styles for the zoom-in effect */
+        #modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+        }
+
+        #modal-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #modal-content {
+            background-color: #f7f4ed;
+            padding: 2.5rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            position: relative;
+             border: 4px solid #4a4a4a;
+        }
+        
+        #modal-container.active #modal-content {
+            transform: scale(1);
+        }
+
+        #modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #333;
+            transition: transform 0.2s ease;
+        }
+        #modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 overflow-hidden">
+
+    <div class="text-center mb-6">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Welcome to the R3 Unit Building</h1>
+        <p class="text-lg text-gray-600 mt-2">Click on a room to learn about the team inside!</p>
+    </div>
+
+    <!-- SVG Building Container -->
+    <div id="building-container" class="relative w-full max-w-2xl mx-auto">
+        <svg viewBox="0 0 800 650" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+            <defs>
+                <!-- SVG filter for the hand-drawn paper effect -->
+                <filter id="paper-texture">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise"/>
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+                </filter>
+                 <!-- Sky Gradient -->
+                <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#a8d1e3;" />
+                    <stop offset="100%" style="stop-color:#d4e8f2;" />
+                </linearGradient>
+            </defs>
+            
+            <g id="house-and-env">
+                <!-- Background Sky -->
+                <rect width="800" height="600" fill="url(#skyGradient)"/>
+                
+                <!-- Clouds -->
+                <g class="cloud-1">
+                    <path d="M 100 150 C 80 150, 80 120, 110 120 C 110 100, 140 100, 160 120 C 190 120, 190 150, 170 150 Z" fill="rgba(255,255,255,0.8)"/>
+                </g>
+                 <g class="cloud-2">
+                    <path d="M 500 80 C 480 80, 480 50, 510 50 C 510 30, 540 30, 560 50 C 590 50, 590 80, 570 80 Z" fill="rgba(255,255,255,0.7)"/>
+                </g>
+
+                <!-- Ground -->
+                <polygon points="0,550 800,550 800,650 0,650" fill="#788478"/>
+                <polygon points="0,550 100,550 100,530 0,530" fill="#a0aec0"/>
+                 <polygon points="580,550 800,550 800,530 580,530" fill="#a0aec0"/>
+            
+                <!-- Building Structure -->
+                <!-- Side Wall -->
+                <polygon points="580,100 750,20 750,470 580,550" fill="#a0aec0" stroke="#2d2d2d" stroke-width="4"/>
+                <!-- Front Wall with cutouts -->
+                <path d="M 100,550 L 580,550 L 580,100 L 100,100 Z M 115,215 L 115,115 L 565,115 L 565,215 Z M 115,370 L 115,230 L 330,230 L 330,370 Z M 350,370 L 350,230 L 565,230 L 565,370 Z M 115,525 L 115,385 L 330,385 L 330,525 Z M 350,525 L 350,385 L 565,385 L 565,525 Z" fill="#e2e8f0" stroke="#2d2d2d" stroke-width="4" fill-rule="evenodd"/>
+                <!-- Roof -->
+                <polygon points="100,100 580,100 750,20 270,20" fill="#b91c1c" stroke="#2d2d2d" stroke-width="4"/>
+
+                <!-- Chimney -->
+                <g id="chimney">
+                    <polygon points="200,80 240,80 250,70 210,70" fill="#a41818" stroke="#2d2d2d" stroke-width="3"/>
+                    <polygon points="200,80 205,30 245,30 240,80" fill="#c53030" stroke="#2d2d2d" stroke-width="4"/>
+                    <ellipse cx="225" cy="30" rx="22" ry="5" fill="#a41818" stroke="#2d2d2d" stroke-width="2"/>
+                    <g class="smoke">
+                         <circle cx="225" cy="20" r="10" fill="rgba(255,255,255,0.7)"/>
+                    </g>
+                </g>
+                
+                 <!-- Antenna -->
+                <g id="antenna">
+                    <line x1="680" y1="50" x2="680" y2="0" stroke="#2d2d2d" stroke-width="4" />
+                    <line x1="660" y1="10" x2="700" y2="10" stroke="#2d2d2d" stroke-width="3" />
+                    <line x1="670" y1="25" x2="690" y2="25" stroke="#2d2d2d" stroke-width="3" />
+                    <circle id="antenna-light" cx="680" cy="0" r="5" stroke="#2d2d2d" stroke-width="2"/>
+                </g>
+                
+                <!-- Room Details Stroke -->
+                <g stroke="#2d2d2d" stroke-width="3">
+                    <!-- Management Room -->
+                    <g class="room-group" data-team="management">
+                        <polygon points="115,115 565,115 725,40 275,40" fill="#3182ce" class="room-shape"/> <!-- floor -->
+                        <polygon points="275,40 725,40 725,22 275,22" fill="#2c5282" pointer-events="none"/> <!-- back wall -->
+                        <polygon points="725,40 725,22 565,32 565,115" fill="#2b6cb0" pointer-events="none"/> <!-- side wall -->
+                        <!-- desk -->
+                        <polygon points="450,90 540,90 590,70 500,70" fill="#a0aec0"/>
+                        <rect x="505" y="45" width="20" height="25" fill="#e2e8f0" />
+                        <text class="room-label" x="340" y="85">Management</text>
+                    </g>
+                    <!-- USM Sector -->
+                    <g class="room-group" data-team="usm">
+                        <polygon points="115,230 330,230 410,190 195,190" class="room-shape" fill="#38a169"/>
+                        <polygon points="195,190 410,190 410,120 195,120" fill="#2f855a" pointer-events="none"/>
+                        <polygon points="410,190 410,120 330,160 330,230" fill="#3f996e" pointer-events="none"/>
+                        <!-- servers -->
+                        <rect x="220" y="150" width="20" height="35" fill="#e2e8f0"/>
+                        <rect x="250" y="150" width="20" height="35" fill="#e2e8f0"/>
+                        <text class="room-label" x="222.5" y="210">USM Sector</text>
+                    </g>
+                    <!-- UXS Team -->
+                    <g class="room-group" data-team="uxs">
+                        <polygon points="350,230 565,230 645,190 430,190" class="room-shape" fill="#dd6b20"/>
+                        <polygon points="430,190 645,190 645,120 430,120" fill="#c05621" pointer-events="none"/>
+                        <polygon points="645,190 645,120 565,160 565,230" fill="#d06020" pointer-events="none"/>
+                         <!-- helpdesk -->
+                        <polygon points="450,210 520,210 550,200 480,200" fill="#a0aec0" />
+                        <text class="room-label" x="457.5" y="210">UXS Team</text>
+                    </g>
+                    <!-- OCT Team -->
+                    <g class="room-group" data-team="oct">
+                        <polygon points="115,385 330,385 410,345 195,345" class="room-shape" fill="#805ad5"/>
+                        <polygon points="195,345 410,345 410,275 195,275" fill="#6b46c1" pointer-events="none"/>
+                        <polygon points="410,345 410,275 330,315 330,385" fill="#704ec5" pointer-events="none"/>
+                         <!-- board -->
+                        <rect x="230" y="290" width="80" height="50" fill="#e2e8f0"/>
+                        <text class="room-label" x="222.5" y="365">OCT Team</text>
+                    </g>
+                    <!-- CAM Team -->
+                    <g class="room-group" data-team="cam">
+                        <polygon points="350,385 565,385 645,345 430,345" class="room-shape" fill="#d53f8c"/>
+                        <polygon points="430,345 645,345 645,275 430,275" fill="#b83280" pointer-events="none"/>
+                        <polygon points="645,345 645,275 565,315 565,385" fill="#c53986" pointer-events="none"/>
+                        <circle cx="375" cy="455" r="6" fill="#2d2d2d" stroke="none"/>
+                        <text class="room-label" x="457.5" y="365">CAM Team</text>
+                    </g>
+                </g>
+
+                <!-- Side Windows with perspective -->
+                <polygon points="620,150 690,125 690,185 620,210" fill="#a8d1e3" stroke="#2d2d2d" stroke-width="4"/>
+                <polygon points="620,280 690,255 690,315 620,340" fill="#a8d1e3" stroke="#2d2d2d" stroke-width="4"/>
+                <polygon points="620,410 690,385 690,445 620,470" fill="#a8d1e3" stroke="#2d2d2d" stroke-width="4"/>
+            </g>
+        </svg>
+    </div>
+
+    <!-- Modal Container -->
+    <div id="modal-container">
+        <div id="modal-content">
+            <button id="modal-close">&times;</button>
+            <h2 id="modal-title" class="text-3xl font-bold mb-4 text-gray-800"></h2>
+            <p id="modal-description" class="text-gray-700 mb-4"></p>
+            <div id="modal-video" class="video-container">
+                <!-- Video iframe will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- TEAM DATA ---
+            const teamData = {
+                management: {
+                    title: "Management Team",
+                    description: "This team provides strategic direction and oversight. It includes the Head of Unit, Deputy Head of Unit, Secretariat, and the KPI/Contracts team, ensuring our goals are met and operations run smoothly.",
+                    videoUrl: "https://www.youtube.com/embed/gB-682qfBFw" // Example video
+                },
+                usm: {
+                    title: "USM Sector",
+                    description: "The Unified Service Management (USM) sector is the backbone of our service delivery. They handle crucial processes like testing, release management, and provide second-level support for complex user issues.",
+                    videoUrl: "https://www.youtube.com/embed/z26tKzP_T54" // Example video
+                },
+                uxs: {
+                    title: "UXS Team",
+                    description: "The User Experience Services (UXS) team is our frontline. As the first-level helpdesk, they are the first point of contact for users, providing immediate assistance and ensuring a positive user experience.",
+                    videoUrl: "https://www.youtube.com/embed/uA3-eh_v2-s" // Example video
+                },
+                oct: {
+                    title: "OCT Team",
+                    description: "The Outreach, Communication, and Training (OCT) team manages how we connect with our users. They handle trainings, communications, onboarding new entities, and coordinate horizontal activities like year-end processes.",
+                    videoUrl: "https://www.youtube.com/embed/c_hin_a2UME" // Example video
+                },
+                cam: {
+                    title: "CAM Team",
+                    description: "The Customer Access Management (CAM) team is our security gatekeeper. They are responsible for access management and functional security, ensuring that only authorized users can access the right systems and data.",
+                    videoUrl: "https://www.youtube.com/embed/AUAuF0OH_Qk" // Example video
+                }
+            };
+
+            // --- DOM Elements ---
+            const rooms = document.querySelectorAll('.room-group');
+            const modalContainer = document.getElementById('modal-container');
+            const modalCloseBtn = document.getElementById('modal-close');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const modalVideoContainer = document.getElementById('modal-video');
+
+            // --- Functions ---
+            function openModal(teamKey) {
+                const team = teamData[teamKey];
+                if (!team) return;
+
+                modalTitle.textContent = team.title;
+                modalDescription.textContent = team.description;
+                
+                modalVideoContainer.innerHTML = '';
+                if (team.videoUrl) {
+                    const iframe = document.createElement('iframe');
+                    iframe.src = team.videoUrl;
+                    iframe.title = "YouTube video player for " + team.title;
+                    iframe.frameborder = "0";
+                    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+                    iframe.allowFullscreen = true;
+                    modalVideoContainer.appendChild(iframe);
+                }
+
+                modalContainer.classList.add('active');
+            }
+
+            function closeModal() {
+                modalContainer.classList.remove('active');
+                modalVideoContainer.innerHTML = '';
+            }
+
+            // --- Event Listeners ---
+            rooms.forEach(room => {
+                room.addEventListener('click', () => {
+                    const teamKey = room.dataset.team;
+                    openModal(teamKey);
+                });
+            });
+
+            modalCloseBtn.addEventListener('click', closeModal);
+
+            modalContainer.addEventListener('click', (e) => {
+                if (e.target === modalContainer) {
+                    closeModal();
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modalContainer.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
